@@ -1,8 +1,8 @@
-package me.agentkiiya.bedwars2023manager;
+package me.agentkiiya.bwmanager;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class Main extends JavaPlugin {
+public class Manager extends JavaPlugin {
 
     @Override
     public void onEnable() {
