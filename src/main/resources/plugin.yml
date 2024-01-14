@@ -4,3 +4,6 @@ main: me.agentkiiya.bwmanager.Manager
 softdepend: [ BedWars2023, BWProxy2023 ]
 authors: [ Agent, Kiiya ]
 description: An addon for the BedWars2023 plugin that implements functionalities like Addon Manager, Arena Manager, Stats Manager, etc.
+commands:
+  addons:
+    description: Open a gui to manage addons for BedWars2023
