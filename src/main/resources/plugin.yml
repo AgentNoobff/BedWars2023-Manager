@@ -1,0 +1,6 @@
+name: BedWars2023-Manager
+version: '${project.version}'
+main: me.agentkiiya.bedwars2023manager.Main
+softdepend: [BedWars2023]
+authors: [Agent, Kiiya]
+description: An addon for the BedWars2023 plugin that implements functionalities like Addon Manager, Arena Manager, Stats Manager, etc.
