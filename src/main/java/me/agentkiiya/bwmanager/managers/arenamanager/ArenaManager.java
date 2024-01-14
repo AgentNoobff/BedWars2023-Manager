@@ -10,7 +10,7 @@ public class ArenaManager {
         enable();
     }
 
-    public void enable() {
+    private void enable() {
 
     }
 

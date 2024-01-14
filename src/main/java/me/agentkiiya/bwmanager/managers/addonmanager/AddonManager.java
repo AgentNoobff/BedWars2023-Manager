@@ -19,7 +19,9 @@ public final class AddonManager {
         enable();
     }
 
-    public void enable() {
+
+    // This code is messy since it was made in a short amount of time, other managers will be cleaner.
+    private void enable() {
        if (Bukkit.getPluginManager().isPluginEnabled("BedWars2023")) {
             getLogger().info(Utility.c("&aBedWars2023 found! Hooking..."));
             bedWars = Bukkit.getServicesManager().getRegistration(BedWars.class).getProvider();
