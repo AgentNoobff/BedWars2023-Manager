@@ -1,6 +1,7 @@
 package me.agentkiiya.bwmanager.managers.addonmanager;
 
 import com.tomkeuper.bedwars.api.BedWars;
+import com.tomkeuper.bedwars.stats.StatsManager;
 import me.agentkiiya.bwmanager.Manager;
 import me.agentkiiya.bwmanager.managers.addonmanager.command.ProxyAddonInventory;
 import me.agentkiiya.bwmanager.utils.Utility;
@@ -37,10 +38,6 @@ public final class AddonManager {
 
             getLogger().info(Utility.c("&aListeners loaded successfully!"));
 
-            getLogger().info(Utility.c("&eLoading commands..."));
-            getServer().getPluginCommand("addons").setExecutor(new AddonInventoryCommand());
-            getLogger().info(Utility.c("&aCommands loaded successfully!"));
-
             getLogger().info(Utility.c("&aAddon Manager for BedWars2023 has been enabled successfully!"));
         } else if (Bukkit.getPluginManager().isPluginEnabled("BWProxy2023")) {
             getLogger().info(Utility.c("&aBWProxy2023 found! Hooking..."));
@@ -55,10 +52,6 @@ public final class AddonManager {
             }
 
             getLogger().info(Utility.c("&aListeners loaded successfully!"));
-
-            getLogger().info(Utility.c("&eLoading commands..."));
-            getServer().getPluginCommand("addons").setExecutor(new ProxyAddonInventory());
-            getLogger().info(Utility.c("&aCommands loaded successfully!"));
 
             getLogger().info(Utility.c("&aAddon Manager for BWProxy2023 has been enabled successfully!"));
         } else {
