@@ -2,6 +2,7 @@ package me.agentkiiya.bwmanager.managers.command;
 
 import com.tomkeuper.bedwars.api.language.Language;
 import com.tomkeuper.bedwars.api.stats.IPlayerStats;
+import com.tomkeuper.bedwars.stats.StatsAPI;
 import jdk.jshell.execution.Util;
 import me.agentkiiya.bwmanager.utils.Utility;
 import me.agentkiiya.bwmanager.managers.addonmanager.menu.bedwars2023.AddonsMenu;
@@ -13,16 +14,18 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.IOException;
+import java.sql.Timestamp;
 import java.time.Instant;
 
-import static me.agentkiiya.bwmanager.Manager.statsManager;
-import static me.agentkiiya.bwmanager.Manager.isBw2023;
-import static me.agentkiiya.bwmanager.Manager.isBwProxy2023;
+import static me.agentkiiya.bwmanager.Manager.*;
+
 public class MainCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length < 1) {
             Utility.sendMessage(sender, "&cUsage: /bwm <addons|arenas|stats> ... [args]");
+            return false;
         }
         if (args[0].equalsIgnoreCase("addons") || args[0].equalsIgnoreCase("addon")) {
             if (isBw2023) {
@@ -96,14 +99,18 @@ public class MainCommand implements CommandExecutor {
                 return false;
             }
 
-            OfflinePlayer target = Bukkit.getPlayer(args[1]);
+            OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
 
             if (target == null) {
                 Utility.sendMessage(sender, "&cThat player does not exist!");
                 return false;
             }
 
-            IPlayerStats playerStats = statsManager.get(target.getUniqueId());
+            IPlayerStats playerStats;
+            playerStats = statsManager.getUnsafe(target.getUniqueId());
+            if (playerStats == null) {
+                playerStats = bedWars.getRemoteDatabase().fetchStats(target.getUniqueId());
+            }
             int beds = playerStats.getBedsDestroyed();
             int finalDeaths = playerStats.getFinalDeaths();
             int finalKills = playerStats.getFinalKills();
@@ -124,13 +131,14 @@ public class MainCommand implements CommandExecutor {
                     Utility.sendMessage(sender, "&aGames Played: " + gamesPlayed);
                     Utility.sendMessage(sender, "&aWins: " + wins);
                     Utility.sendMessage(sender, "&aLosses: " + losses);
+                    Utility.sendMessage(sender, "&aBeds Destroyed: " + beds);
                     Utility.sendMessage(sender, "&aTotal Kills: " + totalKills);
                     Utility.sendMessage(sender, "&aFinal Kills: " + finalKills);
                     Utility.sendMessage(sender, "&aFinal Deaths: " + finalDeaths);
                     Utility.sendMessage(sender, "&aKills: " + kills);
                     Utility.sendMessage(sender, "&aDeaths: " + deaths);
-                    Utility.sendMessage(sender, "&aFirst Played: " + firstPlay);
-                    Utility.sendMessage(sender, "&aLast Played: " + lastPlay);
+                    Utility.sendMessage(sender, "&aFirst Played: " + Timestamp.from(firstPlay));
+                    Utility.sendMessage(sender, "&aLast Played: " + Timestamp.from(lastPlay));
                     return true;
                 } else if (args[2].equalsIgnoreCase("set")) {
                     Utility.sendMessage(sender, "&cUsage: /bwm stats <player> set <stat> <value>");
@@ -143,50 +151,54 @@ public class MainCommand implements CommandExecutor {
                     switch (stat) {
                         case "gamesplayed":
                         case "games":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has played &e" + gamesPlayed + "&agames.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has played &e" + gamesPlayed + "&a games.");
                             break;
                         case "wins":
                         case "win":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has won &e" + wins + "&agames.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has won &e" + wins + "&a games.");
                             break;
                         case "losses":
                         case "loss":
                         case "loses":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has lost &e" + losses + "&agames.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has lost &e" + losses + "&a games.");
+                            break;
+                        case "beds":
+                        case "bedsdestroyed":
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has broken &e" + beds + "&a beds.");
                             break;
                         case "totaldeaths":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + totalDeaths + "&adeaths in total (normal + final).");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + totalDeaths + "&a deaths in total (normal + final).");
                             break;
                         case "totalkills":
                         case "totalkill":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + totalKills + "&akills in total (normal + final).");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + totalKills + "&a kills in total (normal + final).");
                             break;
                         case "finalkills":
                         case "finals":
                         case "finalkill":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + finalKills + "&afinal kills.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + finalKills + "&a final kills.");
                             break;
                         case "finaldeaths":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + finalDeaths + "&afinal deaths.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + finalDeaths + "&a final deaths.");
                             break;
                         case "kills":
                         case "normalkills":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + kills + "&anormal kills.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + kills + "&a normal kills.");
                             break;
                         case "deaths":
                         case "normaldeaths":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + deaths + "&anormal deaths.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + deaths + "&a normal deaths.");
                             break;
                         case "firstplayed":
                         case "firstplay":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a first played on this server on &e" + firstPlay);
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a first played on this server on &e" + Timestamp.from(firstPlay));
                             break;
                         case "lastplayed":
                         case "lastplay":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a last played on this server on &e" + lastPlay);
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a last played on this server on &e" + Timestamp.from(lastPlay));
                             break;
                         default:
-                            Utility.sendMessage(sender, "&cAvailable stats: gamesPlayed, wins, losses, totalDeaths, totalKills, finalKills, finalDeaths, kills, deaths, firstplay, lastplay");
+                            Utility.sendMessage(sender, "&cAvailable stats: gamesPlayed, wins, losses, beds, totalDeaths, totalKills, finalKills, finalDeaths, kills, deaths, firstplay, lastplay");
                     }
                 } else if (args[2].equalsIgnoreCase("set")) {
                     Utility.sendMessage(sender, "&cUsage: /bwm stats <player> set <stat> <value>");
@@ -196,106 +208,112 @@ public class MainCommand implements CommandExecutor {
             } else if (args.length == 5) {
                 String stat = args[3].toLowerCase();
                 int valueInt = Integer.parseInt(args[4]);
-                Instant valueInst = Instant.parse(args[4]);
                 if (args[2].equalsIgnoreCase("get")) {
                     switch (stat) {
                         case "gamesplayed":
                         case "games":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has played &e" + gamesPlayed + "&agames.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has played &e" + gamesPlayed + "&a games.");
                             break;
                         case "wins":
                         case "win":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has won &e" + wins + "&agames.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has won &e" + wins + "&a games.");
                             break;
                         case "losses":
                         case "loss":
                         case "loses":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has lost &e" + losses + "&agames.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has lost &e" + losses + "&a games.");
+                            break;
+                        case "beds":
+                        case "bedsdestroyed":
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has broken &e" + beds + "&a beds.");
                             break;
                         case "totaldeaths":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + totalDeaths + "&adeaths in total (normal + final).");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + totalDeaths + "&a deaths in total (normal + final).");
                             break;
                         case "totalkills":
                         case "totalkill":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + totalKills + "&akills in total (normal + final).");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + totalKills + "&a kills in total (normal + final).");
                             break;
                         case "finalkills":
                         case "finals":
                         case "finalkill":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + finalKills + "&afinal kills.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + finalKills + "&a final kills.");
                             break;
                         case "finaldeaths":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + finalDeaths + "&afinal deaths.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + finalDeaths + "&a final deaths.");
                             break;
                         case "kills":
                         case "normalkills":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + kills + "&anormal kills.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + kills + "&a normal kills.");
                             break;
                         case "deaths":
                         case "normaldeaths":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + deaths + "&anormal deaths.");
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + deaths + "&a normal deaths.");
                             break;
                         case "firstplayed":
                         case "firstplay":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a first played on this server on &e" + firstPlay);
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a first played on this server on &e" + Timestamp.from(firstPlay));
                             break;
                         case "lastplayed":
                         case "lastplay":
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a last played on this server on &e" + lastPlay);
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a last played on this server on &e" + Timestamp.from(lastPlay));
                             break;
                         default:
-                            Utility.sendMessage(sender, "&cAvailable stats: gamesPlayed, wins, losses, totalDeaths, totalKills, finalKills, finalDeaths, kills, deaths, firstplay, lastplay");
+                            Utility.sendMessage(sender, "&cAvailable stats: gamesPlayed, wins, losses, beds, totalDeaths, totalKills, finalKills, finalDeaths, kills, deaths, firstplay, lastplay");
                     }
                 } else if (args[2].equalsIgnoreCase("set")) {
                     switch (stat) {
                         case "gamesplayed":
                         case "games":
                             playerStats.setGamesPlayed(valueInt);
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has played &e" + gamesPlayed + "&agames.");
+                            bedWars.getRemoteDatabase().saveStats(playerStats);
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has played &e" + valueInt + "&a games.");
                             break;
                         case "wins":
                         case "win":
                             playerStats.setWins(valueInt);
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has won &e" + wins + "&agames.");
+                            bedWars.getRemoteDatabase().saveStats(playerStats);
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has won &e" + valueInt + "&a games.");
                             break;
                         case "losses":
                         case "loss":
                         case "loses":
                             playerStats.setLosses(valueInt);
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has lost &e" + losses + "&agames.");
+                            bedWars.getRemoteDatabase().saveStats(playerStats);
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has lost &e" + valueInt + "&a games.");
+                            break;
+                        case "beds":
+                        case "bedsdestroyed":
+                            playerStats.setBedsDestroyed(valueInt);
+                            bedWars.getRemoteDatabase().saveStats(playerStats);
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has broken &e" + valueInt + "&a beds.");
                             break;
                         case "finalkills":
                         case "finals":
                         case "finalkill":
                             playerStats.setFinalKills(valueInt);
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + finalKills + "&afinal kills.");
+                            bedWars.getRemoteDatabase().saveStats(playerStats);
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + valueInt + "&a final kills.");
                             break;
                         case "finaldeaths":
                             playerStats.setFinalDeaths(valueInt);
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + finalDeaths + "&afinal deaths.");
+                            bedWars.getRemoteDatabase().saveStats(playerStats);
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + valueInt + "&a final deaths.");
                             break;
                         case "kills":
                         case "normalkills":
                             playerStats.setKills(valueInt);
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + kills + "&anormal kills.");
+                            bedWars.getRemoteDatabase().saveStats(playerStats);
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + valueInt + "&a normal kills.");
                             break;
                         case "deaths":
                         case "normaldeaths":
                             playerStats.setDeaths(valueInt);
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + deaths + "&anormal deaths.");
-                            break;
-                        case "firstplayed":
-                        case "firstplay":
-                            playerStats.setFirstPlay(valueInst);
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a first played on this server on &e" + firstPlay);
-                            break;
-                        case "lastplayed":
-                        case "lastplay":
-                            playerStats.setLastPlay(valueInst);
-                            Utility.sendMessage(sender, "&e" + target.getName() + "&a last played on this server on &e" + lastPlay);
+                            bedWars.getRemoteDatabase().saveStats(playerStats);
+                            Utility.sendMessage(sender, "&e" + target.getName() + "&a has &e" + valueInt + "&a normal deaths.");
                             break;
                         default:
-                            Utility.sendMessage(sender, "&cAvailable stats: gamesPlayed, wins, losses, finalKills, finalDeaths, kills, deaths, firstplay, lastplay");
+                            Utility.sendMessage(sender, "&cAvailable stats: gamesPlayed, wins, losses, beds, finalKills, finalDeaths, kills, deaths");
                     }
                 } else {
                     Utility.sendMessage(sender, "&cUsage: /bwm stats <player> set <stat> <value>");
