@@ -16,6 +16,8 @@ import org.bukkit.entity.Player;
 import java.time.Instant;
 
 import static me.agentkiiya.bwmanager.Manager.statsManager;
+import static me.agentkiiya.bwmanager.Manager.isBw2023;
+import static me.agentkiiya.bwmanager.Manager.isBwProxy2023;
 public class MainCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -23,36 +25,64 @@ public class MainCommand implements CommandExecutor {
             Utility.sendMessage(sender, "&cUsage: /bwm <addons|arenas|stats> ... [args]");
         }
         if (args[0].equalsIgnoreCase("addons") || args[0].equalsIgnoreCase("addon")) {
-            if (sender instanceof ConsoleCommandSender) {
-                Utility.sendMessage(sender, "&cYou must be in the server to use this command");
+            if (isBw2023) {
+                if (sender instanceof ConsoleCommandSender) {
+                    Utility.sendMessage(sender, "&cYou must be in the server to use this command");
+                    return false;
+                }
+                Player player = (Player) sender;
+
+                if (!sender.hasPermission("bw.addons") || !sender.isOp() || !sender.hasPermission("bw.*") || !sender.hasPermission("*")) {
+                    Utility.sendMessage(sender, Language.getMsg(player, "cmd-not-found").replace("%bw_lang_prefix%", Language.getMsg(player, "prefix")));
+                    return false;
+                }
+
+                if (args.length > 2) {
+                    Utility.sendMessage(sender, Language.getMsg(player, "cmd-not-found").replace("%bw_lang_prefix%", Language.getMsg(player, "prefix")));
+                    return false;
+                }
+
+                String option;
+                if (args.length == 1) {
+                    option = "--registered";
+                } else {
+                    option = args[1];
+                }
+
+                new AddonsMenu(player, option);
+                return false;
+            } else if (isBwProxy2023) {
+                if (sender instanceof ConsoleCommandSender) {
+                    sender.sendMessage(Utility.c("&cYou must be in the server to use this command"));
+                    return false;
+                }
+                Player player = (Player) sender;
+
+                if (!player.hasPermission("bw.addons") || !player.isOp() || !player.hasPermission("bw.*") || !player.hasPermission("*")) {
+                    player.sendMessage(Utility.c(Language.getMsg(player, "cmd-not-found").replace("%bw_lang_prefix%", Language.getMsg(player, "prefix"))));
+                    return false;
+                }
+
+                if (args.length > 2) {
+                    player.sendMessage(Utility.c(Language.getMsg(player, "cmd-not-found").replace("%bw_lang_prefix%", Language.getMsg(player, "prefix"))));
+                    return false;
+                }
+
+                String option;
+                if (args.length == 1) {
+                    option = "--registered";
+                } else {
+                    option = args[1];
+                }
+
+                new me.agentkiiya.bwmanager.managers.addonmanager.menu.proxy.AddonsMenu(player, option);
                 return false;
             }
-            Player player = (Player) sender;
-
-            if (!sender.hasPermission("bw.addons") || !sender.isOp() || !sender.hasPermission("bw.*") || !sender.hasPermission("*")) {
-                Utility.sendMessage(sender, Language.getMsg(p, "cmd-not-found").replace("%bw_lang_prefix%", Language.getMsg(p, "prefix")));
-                return false;
-            }
-
-            if (args.length > 2) {
-                Utility.sendMessage(sender, Language.getMsg(p, "cmd-not-found").replace("%bw_lang_prefix%", Language.getMsg(p, "prefix")));
-                return false;
-            }
-
-            String option;
-            if (args.length == 1) {
-                option = "--registered";
-            } else {
-                option = args[1];
-            }
-
-            new AddonsMenu(player, option);
-            return false;
         } else if (args[0].equalsIgnoreCase("stats")) {
             Player player = (Player) sender;
 
             if (!sender.hasPermission("bw.statsmanager") || !sender.isOp() || !sender.hasPermission("bw.*") || !sender.hasPermission("*") || !(sender instanceof ConsoleCommandSender)) {
-                Utility.sendMessage(sender, Language.getMsg(player, "cmd-not-found").replace("%bw_lang_prefix%", Language.getMsg(p, "prefix")));
+                Utility.sendMessage(sender, Language.getMsg(player, "cmd-not-found").replace("%bw_lang_prefix%", Language.getMsg(player, "prefix")));
                 return false;
             }
 
@@ -271,5 +301,6 @@ public class MainCommand implements CommandExecutor {
             }
             return false;
         }
+        return true;
     }
 }
