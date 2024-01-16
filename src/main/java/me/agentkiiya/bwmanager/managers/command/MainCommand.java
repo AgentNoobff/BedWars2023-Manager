@@ -81,8 +81,12 @@ public class MainCommand implements CommandExecutor {
         } else if (args[0].equalsIgnoreCase("stats")) {
             Player player = (Player) sender;
 
-            if (!sender.hasPermission("bw.statsmanager") || !sender.isOp() || !sender.hasPermission("bw.*") || !sender.hasPermission("*") || !(sender instanceof ConsoleCommandSender)) {
-                Utility.sendMessage(sender, Language.getMsg(player, "cmd-not-found").replace("%bw_lang_prefix%", Language.getMsg(player, "prefix")));
+            if (!sender.hasPermission("bw.statsmanager") && !sender.isOp() && !sender.hasPermission("bw.*") && !sender.hasPermission("*")) {
+                if (player instanceof ConsoleCommandSender) {
+                    Utility.sendMessage(sender, Language.getMsg(Language.getDefaultLanguage(), Bukkit.getPlayer("AgentNoobff"), "cmd-not-found").replace("%bw_lang_prefix%", Language.getMsg(player, "prefix")));
+                } else {
+                    Utility.sendMessage(sender, Language.getMsg(player, "cmd-not-found").replace("%bw_lang_prefix%", Language.getMsg(player, "prefix")));
+                }
                 return false;
             }
 
